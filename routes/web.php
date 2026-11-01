@@ -9,7 +9,3 @@ Route::get('/tools', [ToolAssistantController::class, 'index'])->name('tools.ind
 Route::post('/tools/chat', [ToolAssistantController::class, 'chat'])
     ->middleware('throttle:20,1')
     ->name('tools.chat');
-
-Route::get('/dashboard', function () {
-    dd(123);
-});
