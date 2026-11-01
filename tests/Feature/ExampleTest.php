@@ -1,7 +1,13 @@
 <?php
 
-test('returns a successful response', function () {
-    $response = $this->get(route('home'));
+namespace Tests\Feature;
 
-    $response->assertOk();
-});
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_it_returns_a_successful_response(): void
+    {
+        $this->get(route('home'))->assertOk();
+    }
+}
