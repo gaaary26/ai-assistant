@@ -57,7 +57,7 @@ class FindNearbyBikeStations implements Tool
             ->take($validated['limit'] ?? 5)
             ->values();
 
-        return json_encode(['stations' => $stations->all()], JSON_UNESCAPED_UNICODE);
+        return json_encode(['stations' => $stations->all()], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     /**

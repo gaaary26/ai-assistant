@@ -36,7 +36,7 @@ class KaohsiungYouBikeClient
             throw new RuntimeException('Unexpected Kaohsiung YouBike API response.');
         }
 
-        return collect($payload['retVal'])
+        return array_values(collect($payload['retVal'])
             ->filter(fn (mixed $station) => is_array($station) && filled($station['sno'] ?? null))
             ->unique('sno')
             ->map(fn (array $station) => [
@@ -53,8 +53,7 @@ class KaohsiungYouBikeClient
                 'available_return_bikes' => (int) ($station['bemp'] ?? 0),
                 'source_updated_at' => $this->parseSourceTime($station['mday'] ?? null),
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

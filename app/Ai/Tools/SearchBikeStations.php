@@ -45,7 +45,7 @@ class SearchBikeStations implements Tool
 
         return json_encode([
             'stations' => $stations->map(fn (BikeStation $station) => $station->toSummary())->all(),
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     /**

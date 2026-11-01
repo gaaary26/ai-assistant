@@ -57,7 +57,7 @@ class GetDistrictBikeSummary implements Tool
         return json_encode([
             'data_updated_at' => BikeStation::latestSourceUpdate()?->setTimezone(BikeStation::LOCAL_TIMEZONE)->toIso8601String(),
             'districts' => $districts->all(),
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     /**

@@ -33,7 +33,7 @@ class GetBikeStationHistory implements Tool
         $station = BikeStation::firstWhere('sno', $validated['sno']);
 
         if ($station === null) {
-            return json_encode(['error' => "Station [{$validated['sno']}] does not exist."], JSON_UNESCAPED_UNICODE);
+            return json_encode(['error' => "Station [{$validated['sno']}] does not exist."], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
 
         $hourly = $station->snapshots()
@@ -57,7 +57,7 @@ class GetBikeStationHistory implements Tool
             'station' => $station->toSummary(),
             'timezone' => BikeStation::LOCAL_TIMEZONE,
             'hourly' => $hourly->all(),
-        ], JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
     /**

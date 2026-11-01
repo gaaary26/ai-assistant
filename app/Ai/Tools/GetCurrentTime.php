@@ -32,7 +32,7 @@ class GetCurrentTime implements Tool
             'datetime' => $now->toDateTimeString(),
             'weekday' => $now->englishDayOfWeek,
             'timezone' => $now->timezoneName,
-        ]);
+        ], JSON_THROW_ON_ERROR);
     }
 
     /**
