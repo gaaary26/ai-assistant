@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\BikeStation;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Carbon;
@@ -65,7 +64,6 @@ class KaohsiungYouBikeClient
             return null;
         }
 
-        return Carbon::createFromFormat('YmdHis', (string) $value, BikeStation::LOCAL_TIMEZONE)
-            ->setTimezone(config('app.timezone'));
+        return Carbon::createFromFormat('YmdHis', (string) $value, config()->string('app.timezone'));
     }
 }

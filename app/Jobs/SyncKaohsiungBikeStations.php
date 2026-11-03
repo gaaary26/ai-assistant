@@ -50,8 +50,8 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
         $recordedAt = now();
 
         DB::transaction(function () use ($stations, $recordedAt) {
-            foreach (array_chunk($stations, self::CHUNK_SIZE) as $chunk) {
-                BikeStation::upsert($chunk, ['sno'], [
+            foreach (collect($stations)->chunk(self::CHUNK_SIZE) as $chunk) {
+                BikeStation::upsert($chunk->values()->all(), ['sno'], [
                     'name',
                     'district',
                     'address',
@@ -68,16 +68,16 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
 
             $stationIds = BikeStation::pluck('id', 'sno');
 
-            $snapshots = array_map(fn (array $station) => [
+            $snapshots = collect($stations)->map(fn (array $station) => [
                 'bike_station_id' => $stationIds[$station['sno']],
                 'available_rent_bikes' => $station['available_rent_bikes'],
                 'available_electric_bikes' => $station['available_electric_bikes'],
                 'available_return_bikes' => $station['available_return_bikes'],
                 'recorded_at' => $recordedAt,
-            ], $stations);
+            ]);
 
-            foreach (array_chunk($snapshots, self::CHUNK_SIZE) as $chunk) {
-                BikeStationSnapshot::insert($chunk);
+            foreach ($snapshots->chunk(self::CHUNK_SIZE) as $chunk) {
+                BikeStationSnapshot::insert($chunk->values()->all());
             }
         });
     }

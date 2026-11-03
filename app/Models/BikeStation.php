@@ -48,11 +48,6 @@ class BikeStation extends Model
     use HasFactory;
 
     /**
-     * The timezone used by the data source and when presenting times to the assistant.
-     */
-    public const LOCAL_TIMEZONE = 'Asia/Taipei';
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -145,7 +140,7 @@ class BikeStation extends Model
             'available_rent_bikes' => $this->available_rent_bikes,
             'available_electric_bikes' => $this->available_electric_bikes,
             'available_return_bikes' => $this->available_return_bikes,
-            'source_updated_at' => $this->source_updated_at?->setTimezone(self::LOCAL_TIMEZONE)->toIso8601String(),
+            'source_updated_at' => $this->source_updated_at?->toIso8601String(),
         ];
     }
 }

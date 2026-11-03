@@ -9,7 +9,6 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Tests\TestCase;
@@ -27,7 +26,7 @@ class SyncKaohsiungBikeStationsTest extends TestCase
 
     public function test_it_stores_the_stations_and_a_snapshot_of_each_one(): void
     {
-        Carbon::setTestNow('2026-10-31 13:30:00');
+        $this->travelTo('2026-10-31 13:30:00');
         Http::fake(['api.kcg.gov.tw/*' => Http::response($this->payload([
             $this->station(),
             $this->station(['sno' => '501201001', 'act' => '0', 'sbi' => 0, 'bemp' => 0, 'sbi_detail' => null]),
@@ -47,7 +46,7 @@ class SyncKaohsiungBikeStationsTest extends TestCase
         $this->assertSame(4, $station->available_rent_bikes);
         $this->assertSame(1, $station->available_electric_bikes);
         $this->assertSame(36, $station->available_return_bikes);
-        $this->assertSame('2026-10-31 13:27:03', $station->source_updated_at->toDateTimeString());
+        $this->assertSame('2026-10-31 21:27:03', $station->source_updated_at->toDateTimeString());
 
         $inactiveStation = BikeStation::firstWhere('sno', '501201001');
 
@@ -129,7 +128,7 @@ class SyncKaohsiungBikeStationsTest extends TestCase
 
     public function test_it_prunes_snapshots_older_than_the_retention_window(): void
     {
-        Carbon::setTestNow('2026-10-31 12:00:00');
+        $this->travelTo('2026-10-31 12:00:00');
         $station = BikeStation::factory()->create();
         $old = BikeStationSnapshot::factory()->for($station)->create(['recorded_at' => now()->subDays(8)]);
         $recent = BikeStationSnapshot::factory()->for($station)->create(['recorded_at' => now()->subDays(6)]);

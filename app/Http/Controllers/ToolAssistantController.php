@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\ToolAssistant;
+use App\Enums\AiProvider;
 use App\Http\Requests\ToolChatRequest;
 use App\Models\BikeStation;
 use Illuminate\Http\Client\RequestException;
@@ -12,7 +13,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Ai\Ai;
-use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Exceptions\AiException;
 use Laravel\Ai\Responses\Data\ToolResult;
 
@@ -25,7 +25,7 @@ class ToolAssistantController extends Controller
     {
         return Inertia::render('ToolAssistant', [
             'stationStats' => $this->stationStats(),
-            'providers' => array_map(fn (Lab $provider) => $provider->value, ToolChatRequest::SUPPORTED_PROVIDERS),
+            'providers' => collect(AiProvider::cases())->pluck('value')->all(),
         ]);
     }
 
@@ -34,8 +34,6 @@ class ToolAssistantController extends Controller
      */
     public function chat(ToolChatRequest $request): JsonResponse
     {
-        set_time_limit(120);
-
         try {
             $response = (new ToolAssistant($request->validated('history')))->prompt(
                 $request->validated('message'),
@@ -77,7 +75,7 @@ class ToolAssistantController extends Controller
     {
         return [
             'station_count' => BikeStation::count(),
-            'data_updated_at' => BikeStation::latestSourceUpdate()?->setTimezone(BikeStation::LOCAL_TIMEZONE)->toDateTimeString(),
+            'data_updated_at' => BikeStation::latestSourceUpdate()?->toDateTimeString(),
         ];
     }
 }

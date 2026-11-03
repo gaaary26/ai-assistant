@@ -40,9 +40,7 @@ class GetBikeStationHistory implements Tool
             ->where('recorded_at', '>=', now()->subHours($validated['hours'] ?? 6))
             ->orderBy('recorded_at')
             ->get()
-            ->groupBy(fn (BikeStationSnapshot $snapshot) => $snapshot->recorded_at
-                ->setTimezone(BikeStation::LOCAL_TIMEZONE)
-                ->format('Y-m-d H:00'))
+            ->groupBy(fn (BikeStationSnapshot $snapshot) => $snapshot->recorded_at->format('Y-m-d H:00'))
             ->map(fn (Collection $snapshots, string $hour) => [
                 'hour' => $hour,
                 'average_rent_bikes' => round($snapshots->avg('available_rent_bikes'), 1),
@@ -55,7 +53,7 @@ class GetBikeStationHistory implements Tool
 
         return json_encode([
             'station' => $station->toSummary(),
-            'timezone' => BikeStation::LOCAL_TIMEZONE,
+            'timezone' => config()->string('app.timezone'),
             'hourly' => $hourly->all(),
         ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }

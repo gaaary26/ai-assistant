@@ -51,10 +51,9 @@ class ToolAssistant implements Agent, Conversational, HasTools
      */
     public function messages(): iterable
     {
-        return array_map(
-            fn (array $message) => new Message($message['role'], $message['content']),
-            $this->history,
-        );
+        return collect($this->history)
+            ->map(fn (array $message) => new Message($message['role'], $message['content']))
+            ->all();
     }
 
     /**
