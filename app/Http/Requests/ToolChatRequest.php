@@ -2,29 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AiProvider;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Laravel\Ai\Enums\Lab;
 
 class ToolChatRequest extends FormRequest
 {
-    /**
-     * The providers a visitor may use with their own API key.
-     *
-     * @var list<Lab>
-     */
-    public const SUPPORTED_PROVIDERS = [
-        Lab::OpenAI,
-        Lab::Anthropic,
-        Lab::Gemini,
-        Lab::Groq,
-        Lab::xAI,
-        Lab::DeepSeek,
-        Lab::Mistral,
-        Lab::OpenRouter,
-    ];
-
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -41,7 +25,7 @@ class ToolChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'provider' => ['required', Rule::enum(Lab::class)->only(self::SUPPORTED_PROVIDERS)],
+            'provider' => ['required', Rule::enum(AiProvider::class)],
             'api_key' => ['required', 'string', 'max:500'],
             'message' => ['required', 'string', 'max:2000'],
             'history' => ['present', 'array', 'max:20'],

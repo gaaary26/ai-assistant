@@ -9,7 +9,6 @@ use App\Ai\Tools\SearchBikeStations;
 use App\Models\BikeStation;
 use App\Models\BikeStationSnapshot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -76,7 +75,7 @@ class BikeStationToolsTest extends TestCase
 
     public function test_it_summarizes_the_hourly_history_of_a_station(): void
     {
-        Carbon::setTestNow('2026-10-31 13:55:00');
+        $this->travelTo('2026-10-31 13:55:00');
         $station = BikeStation::factory()->create();
         BikeStationSnapshot::factory()->for($station)->create(['available_rent_bikes' => 2, 'recorded_at' => '2026-10-31 13:10:00']);
         BikeStationSnapshot::factory()->for($station)->create(['available_rent_bikes' => 6, 'recorded_at' => '2026-10-31 13:40:00']);
@@ -87,10 +86,10 @@ class BikeStationToolsTest extends TestCase
 
         $this->assertSame($station->sno, $result['station']['sno']);
         $this->assertCount(2, $result['hourly']);
-        $this->assertSame('2026-10-31 20:00', $result['hourly'][0]['hour']);
+        $this->assertSame('2026-10-31 12:00', $result['hourly'][0]['hour']);
         $this->assertEquals(9, $result['hourly'][0]['average_rent_bikes']);
         $this->assertSame(1, $result['hourly'][0]['samples']);
-        $this->assertSame('2026-10-31 21:00', $result['hourly'][1]['hour']);
+        $this->assertSame('2026-10-31 13:00', $result['hourly'][1]['hour']);
         $this->assertEquals(4, $result['hourly'][1]['average_rent_bikes']);
         $this->assertSame(2, $result['hourly'][1]['min_rent_bikes']);
         $this->assertSame(6, $result['hourly'][1]['max_rent_bikes']);

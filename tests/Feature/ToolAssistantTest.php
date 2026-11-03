@@ -8,13 +8,14 @@ use App\Ai\Tools\GetBikeStationHistory;
 use App\Ai\Tools\GetCurrentTime;
 use App\Ai\Tools\GetDistrictBikeSummary;
 use App\Ai\Tools\SearchBikeStations;
+use App\Enums\AiProvider;
 use App\Models\BikeStation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Tools\Request;
 use Tests\TestCase;
@@ -32,8 +33,15 @@ class ToolAssistantTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('ToolAssistant')
                 ->where('stationStats.station_count', 2)
-                ->where('stationStats.data_updated_at', '2026-10-31 21:30:00')
+                ->where('stationStats.data_updated_at', '2026-10-31 13:30:00')
                 ->where('providers.0', 'openai'));
+    }
+
+    public function test_every_supported_provider_is_a_valid_ai_driver(): void
+    {
+        foreach (AiProvider::cases() as $provider) {
+            $this->assertNotNull(Lab::tryFrom($provider->value), "{$provider->value} is not a Lab driver.");
+        }
     }
 
     public function test_it_returns_the_assistant_reply_with_the_station_stats(): void
@@ -107,7 +115,7 @@ class ToolAssistantTest extends TestCase
 
     public function test_it_gets_the_current_time_in_the_requested_timezone(): void
     {
-        Carbon::setTestNow('2026-10-29 04:00:00 UTC');
+        $this->travelTo('2026-10-29 04:00:00 UTC');
 
         $result = json_decode((string) (new GetCurrentTime)->handle(new Request(['timezone' => 'Asia/Taipei'])), true);
 
