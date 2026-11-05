@@ -41,7 +41,10 @@ class GetCurrentTime implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'timezone' => $schema->string()->description('IANA timezone, e.g. Asia/Taipei. Defaults to the application timezone.')->nullable(),
+            'timezone' => $schema
+                ->string()
+                ->description('IANA timezone, e.g. Asia/Taipei. Defaults to the application timezone.')
+                ->nullable(),
         ];
     }
 }

@@ -66,11 +66,31 @@ class FindNearbyBikeStations implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'latitude' => $schema->number()->description('Latitude of the origin point.')->required(),
-            'longitude' => $schema->number()->description('Longitude of the origin point.')->required(),
-            'radius_meters' => $schema->integer()->min(50)->max(3000)->description('Search radius in meters. Defaults to 500.')->nullable(),
-            'availability' => $schema->string()->enum(['any', 'rentable', 'returnable', null])->description('Only return stations with bikes to rent or free docks. Defaults to any.')->nullable(),
-            'limit' => $schema->integer()->min(1)->max(20)->description('Maximum number of stations to return. Defaults to 5.')->nullable(),
+            'latitude' => $schema
+                ->number()
+                ->description('Latitude of the origin point.')
+                ->required(),
+            'longitude' => $schema
+                ->number()
+                ->description('Longitude of the origin point.')
+                ->required(),
+            'radius_meters' => $schema
+                ->integer()
+                ->min(50)
+                ->max(3000)
+                ->description('Search radius in meters. Defaults to 500.')
+                ->nullable(),
+            'availability' => $schema
+                ->string()
+                ->enum(['any', 'rentable', 'returnable', null])
+                ->description('Only return stations with bikes to rent or free docks. Defaults to any.')
+                ->nullable(),
+            'limit' => $schema
+                ->integer()
+                ->min(1)
+                ->max(20)
+                ->description('Maximum number of stations to return. Defaults to 5.')
+                ->nullable(),
         ];
     }
 

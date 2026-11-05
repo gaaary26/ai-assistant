@@ -25,7 +25,9 @@ class ToolAssistantController extends Controller
     {
         return Inertia::render('ToolAssistant', [
             'stationStats' => $this->stationStats(),
-            'providers' => collect(AiProvider::cases())->pluck('value')->all(),
+            'providers' => collect(AiProvider::cases())
+                ->pluck('value')
+                ->all(),
         ]);
     }
 

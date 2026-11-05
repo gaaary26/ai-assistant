@@ -1,12 +1,10 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Jobs;
 
 use App\Jobs\SyncKaohsiungBikeStations;
 use App\Models\BikeStation;
 use App\Models\BikeStationSnapshot;
-use Illuminate\Console\Scheduling\Event;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -16,13 +14,6 @@ use Tests\TestCase;
 class SyncKaohsiungBikeStationsTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Http::preventStrayRequests();
-    }
 
     public function test_it_stores_the_stations_and_a_snapshot_of_each_one(): void
     {
@@ -69,7 +60,12 @@ class SyncKaohsiungBikeStationsTest extends TestCase
         SyncKaohsiungBikeStations::dispatchSync();
 
         $this->assertSame(9, BikeStation::sole()->available_rent_bikes);
-        $this->assertSame([4, 9], BikeStationSnapshot::orderBy('id')->pluck('available_rent_bikes')->all());
+        $this->assertSame(
+            [4, 9],
+            BikeStationSnapshot::orderBy('id')
+                ->pluck('available_rent_bikes')
+                ->all(),
+        );
     }
 
     public function test_it_writes_nothing_when_the_api_fails(): void
@@ -99,44 +95,6 @@ class SyncKaohsiungBikeStationsTest extends TestCase
         }
 
         $this->assertSame(0, BikeStation::count());
-    }
-
-    public function test_the_sync_command_fetches_the_stations_immediately(): void
-    {
-        Http::fake(['api.kcg.gov.tw/*' => Http::response($this->payload([$this->station()]))]);
-
-        $this->artisan('youbike:sync')
-            ->expectsOutput('Synced 1 Kaohsiung YouBike stations.')
-            ->assertSuccessful();
-
-        $this->assertSame(1, BikeStation::count());
-    }
-
-    public function test_it_schedules_the_sync_every_ten_minutes_and_prunes_old_snapshots_daily(): void
-    {
-        $events = collect(app(Schedule::class)->events());
-
-        $this->assertSame(
-            '*/10 * * * *',
-            $events->first(fn (Event $event) => $event->description === SyncKaohsiungBikeStations::class)?->expression,
-        );
-        $this->assertSame(
-            '0 0 * * *',
-            $events->first(fn (Event $event) => str_contains((string) $event->command, 'model:prune'))?->expression,
-        );
-    }
-
-    public function test_it_prunes_snapshots_older_than_the_retention_window(): void
-    {
-        $this->travelTo('2026-10-31 12:00:00');
-        $station = BikeStation::factory()->create();
-        $old = BikeStationSnapshot::factory()->for($station)->create(['recorded_at' => now()->subDays(8)]);
-        $recent = BikeStationSnapshot::factory()->for($station)->create(['recorded_at' => now()->subDays(6)]);
-
-        $this->artisan('model:prune', ['--model' => [BikeStationSnapshot::class]])->assertSuccessful();
-
-        $this->assertSame([$recent->id], BikeStationSnapshot::pluck('id')->all());
-        $this->assertNull($old->fresh());
     }
 
     /**

@@ -54,10 +54,25 @@ class SearchBikeStations implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'keyword' => $schema->string()->description('Part of the station name or address, e.g. 美麗島 or 中山一路.')->nullable(),
-            'district' => $schema->string()->description('Kaohsiung district name, e.g. 新興區 or 左營.')->nullable(),
-            'availability' => $schema->string()->enum(['any', 'rentable', 'returnable', null])->description('Only return stations with bikes to rent or free docks. Defaults to any.')->nullable(),
-            'limit' => $schema->integer()->min(1)->max(20)->description('Maximum number of stations to return. Defaults to 10.')->nullable(),
+            'keyword' => $schema
+                ->string()
+                ->description('Part of the station name or address, e.g. 美麗島 or 中山一路.')
+                ->nullable(),
+            'district' => $schema
+                ->string()
+                ->description('Kaohsiung district name, e.g. 新興區 or 左營.')
+                ->nullable(),
+            'availability' => $schema
+                ->string()
+                ->enum(['any', 'rentable', 'returnable', null])
+                ->description('Only return stations with bikes to rent or free docks. Defaults to any.')
+                ->nullable(),
+            'limit' => $schema
+                ->integer()
+                ->min(1)
+                ->max(20)
+                ->description('Maximum number of stations to return. Defaults to 10.')
+                ->nullable(),
         ];
     }
 }

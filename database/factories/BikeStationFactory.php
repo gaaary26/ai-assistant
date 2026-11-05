@@ -21,7 +21,9 @@ class BikeStationFactory extends Factory
         $rentBikes = fake()->numberBetween(1, $capacity - 1);
 
         return [
-            'sno' => (string) fake()->unique()->numberBetween(501200000, 501299999),
+            'sno' => (string) fake()
+                ->unique()
+                ->numberBetween(501200000, 501299999),
             'name' => 'YouBike2.0_'.fake()->streetName(),
             'district' => fake()->randomElement(['新興區', '前金區', '苓雅區', '鼓山區', '左營區']),
             'address' => fake()->streetAddress(),

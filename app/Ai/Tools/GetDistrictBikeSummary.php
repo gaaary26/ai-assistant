@@ -66,7 +66,10 @@ class GetDistrictBikeSummary implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'district' => $schema->string()->description('Only summarize districts matching this name, e.g. 苓雅區. Omit for all districts.')->nullable(),
+            'district' => $schema
+                ->string()
+                ->description('Only summarize districts matching this name, e.g. 苓雅區. Omit for all districts.')
+                ->nullable(),
         ];
     }
 }
