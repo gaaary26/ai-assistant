@@ -36,7 +36,8 @@ class GetBikeStationHistory implements Tool
             return json_encode(['error' => "Station [{$validated['sno']}] does not exist."], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
 
-        $hourly = $station->snapshots()
+        $hourly = $station
+            ->snapshots()
             ->where('recorded_at', '>=', now()->subHours($validated['hours'] ?? 6))
             ->orderBy('recorded_at')
             ->get()
@@ -64,8 +65,16 @@ class GetBikeStationHistory implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'sno' => $schema->string()->description('The station number (sno), e.g. 501201001.')->required(),
-            'hours' => $schema->integer()->min(1)->max(BikeStationSnapshot::RETENTION_DAYS * 24)->description('How many past hours to include. Defaults to 6.')->nullable(),
+            'sno' => $schema
+                ->string()
+                ->description('The station number (sno), e.g. 501201001.')
+                ->required(),
+            'hours' => $schema
+                ->integer()
+                ->min(1)
+                ->max(BikeStationSnapshot::RETENTION_DAYS * 24)
+                ->description('How many past hours to include. Defaults to 6.')
+                ->nullable(),
         ];
     }
 }

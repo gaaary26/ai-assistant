@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('bike_station_snapshots', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bike_station_id')->constrained()->cascadeOnDelete();
+            $table
+                ->foreignId('bike_station_id')
+                ->constrained()
+                ->cascadeOnDelete();
             $table->unsignedSmallInteger('available_rent_bikes');
             $table->unsignedSmallInteger('available_electric_bikes')->nullable();
             $table->unsignedSmallInteger('available_return_bikes');
