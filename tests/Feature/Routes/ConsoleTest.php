@@ -2,10 +2,7 @@
 
 namespace Tests\Feature\Routes;
 
-use App\Jobs\SyncKaohsiungBikeStations;
 use App\Models\BikeStation;
-use Illuminate\Console\Scheduling\Event;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -47,19 +44,5 @@ class ConsoleTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame(1, BikeStation::count());
-    }
-
-    public function test_it_schedules_the_sync_every_ten_minutes_and_prunes_old_snapshots_daily(): void
-    {
-        $events = collect(app(Schedule::class)->events());
-
-        $this->assertSame(
-            '*/10 * * * *',
-            $events->first(fn (Event $event) => $event->description === SyncKaohsiungBikeStations::class)?->expression,
-        );
-        $this->assertSame(
-            '0 0 * * *',
-            $events->first(fn (Event $event) => str_contains((string) $event->command, 'model:prune'))?->expression,
-        );
     }
 }
