@@ -4,11 +4,16 @@ namespace App\Jobs;
 
 use App\Models\BikeStation;
 use App\Models\BikeStationSnapshot;
-use App\Services\KaohsiungYouBikeClient;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
 {
@@ -44,13 +49,13 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
     /**
      * Fetch the latest station availability, update the stations and record a snapshot of each one.
      */
-    public function handle(KaohsiungYouBikeClient $client): void
+    public function handle(): void
     {
-        $stations = $client->fetchStations();
+        $stations = $this->fetchStations();
         $recordedAt = now();
 
         DB::transaction(function () use ($stations, $recordedAt) {
-            foreach (collect($stations)->chunk(self::CHUNK_SIZE) as $chunk) {
+            foreach ($stations->chunk(self::CHUNK_SIZE) as $chunk) {
                 BikeStation::upsert($chunk->values()->all(), ['sno'], [
                     'name',
                     'district',
@@ -68,7 +73,7 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
 
             $stationIds = BikeStation::pluck('id', 'sno');
 
-            $snapshots = collect($stations)->map(fn (array $station) => [
+            $snapshots = $stations->map(fn (array $station) => [
                 'bike_station_id' => $stationIds[$station['sno']],
                 'available_rent_bikes' => $station['available_rent_bikes'],
                 'available_electric_bikes' => $station['available_electric_bikes'],
@@ -80,5 +85,60 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
                 BikeStationSnapshot::insert($chunk->values()->all());
             }
         });
+    }
+
+    /**
+     * Fetch the real-time availability of every Kaohsiung YouBike station.
+     *
+     * @return Collection<int, array{sno: string, name: string, district: string, address: string, latitude: float, longitude: float, capacity: int, is_active: bool, available_rent_bikes: int, available_electric_bikes: int|null, available_return_bikes: int, source_updated_at: Carbon|null}>
+     *
+     * @throws ConnectionException
+     * @throws RequestException
+     * @throws RuntimeException
+     */
+    private function fetchStations(): Collection
+    {
+        $response = Http::acceptJson()
+            ->connectTimeout(5)
+            ->timeout(30)
+            ->retry(3, 1000)
+            ->get(config('services.kaohsiung_youbike.url'))
+            ->throw();
+
+        if ($response->json('data.data.retCode') !== 1 || ! is_array($response->json('data.data.retVal'))) {
+            throw new RuntimeException('Unexpected Kaohsiung YouBike API response.');
+        }
+
+        return $response
+            ->collect('data.data.retVal')
+            ->filter(fn (mixed $station) => is_array($station) && filled($station['sno'] ?? null))
+            ->unique('sno')
+            ->map(fn (array $station) => [
+                'sno' => (string) $station['sno'],
+                'name' => (string) ($station['sna'] ?? ''),
+                'district' => (string) ($station['sarea'] ?? ''),
+                'address' => (string) ($station['ar'] ?? ''),
+                'latitude' => (float) ($station['lat'] ?? 0),
+                'longitude' => (float) ($station['lng'] ?? 0),
+                'capacity' => (int) ($station['tot'] ?? 0),
+                'is_active' => (string) ($station['act'] ?? '0') === '1',
+                'available_rent_bikes' => (int) ($station['sbi'] ?? 0),
+                'available_electric_bikes' => isset($station['sbi_detail']['eyb']) ? (int) $station['sbi_detail']['eyb'] : null,
+                'available_return_bikes' => (int) ($station['bemp'] ?? 0),
+                'source_updated_at' => $this->parseSourceTime($station['mday'] ?? null),
+            ])
+            ->values();
+    }
+
+    /**
+     * Parse the source's "YmdHis" local timestamp into the application timezone.
+     */
+    private function parseSourceTime(mixed $value): ?Carbon
+    {
+        if ((! is_string($value) && ! is_int($value)) || preg_match('/^\d{14}$/', (string) $value) !== 1) {
+            return null;
+        }
+
+        return Carbon::createFromFormat('YmdHis', (string) $value, config()->string('app.timezone'));
     }
 }
