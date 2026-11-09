@@ -7,7 +7,7 @@ paths:
 
 ## 陣列處理用 Laravel Collection
 處理陣列時優先用 `collect(...)->map()` / `pluck()` / `chunk()` 等 Collection 方法，不要用 `array_map`、`array_column`、`array_chunk` 等原生函式。
-例外：方法回傳型別是 `list<...>` 時，Larastan 會把 `->values()->all()` 推斷成 `array<int, ...>`，這時保留外層的 `array_values(...)` 讓 PHPStan 通過（參考 `KaohsiungYouBikeClient::fetchStations`）。
+例外：方法回傳型別是 `list<...>` 時，Larastan 會把 `->values()->all()` 推斷成 `array<int, ...>`，這時保留外層的 `array_values(...)` 讓 PHPStan 通過。
 
 ## 多個鏈式方法要分行
 依照 PER Coding Style 4.7 和 Laravel 的寫法：一條鏈有三個以上呼叫時就分行，每個 `->` 各自一行，縮排一層。兩個呼叫的維持同一行（例如 `BikeStation::factory()->create()`、`$query->where(...)->where(...)`）。
