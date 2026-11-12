@@ -2,8 +2,10 @@
 
 namespace App\Ai\Tools;
 
+use App\Enums\BikeStationAvailability;
 use App\Models\BikeStation;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Validation\Rule;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -32,7 +34,7 @@ class FindNearbyBikeStations implements Tool
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'radius_meters' => ['nullable', 'integer', 'min:50', 'max:3000'],
-            'availability' => ['nullable', 'in:any,rentable,returnable'],
+            'availability' => ['nullable', Rule::enum(BikeStationAvailability::class)],
             'limit' => ['nullable', 'integer', 'min:1', 'max:20'],
         ]);
 
@@ -46,7 +48,7 @@ class FindNearbyBikeStations implements Tool
         $stations = BikeStation::query()
             ->whereBetween('latitude', [$latitude - $latitudeDelta, $latitude + $latitudeDelta])
             ->whereBetween('longitude', [$longitude - $longitudeDelta, $longitude + $longitudeDelta])
-            ->withAvailability($validated['availability'] ?? null)
+            ->withAvailability($request->enum('availability', BikeStationAvailability::class))
             ->get()
             ->map(fn (BikeStation $station) => [
                 ...$station->toSummary(),
@@ -82,7 +84,7 @@ class FindNearbyBikeStations implements Tool
                 ->nullable(),
             'availability' => $schema
                 ->string()
-                ->enum(['any', 'rentable', 'returnable', null])
+                ->enum(BikeStationAvailability::class)
                 ->description('Only return stations with bikes to rent or free docks. Defaults to any.')
                 ->nullable(),
             'limit' => $schema
