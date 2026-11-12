@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BikeStationAvailability;
 use Database\Factories\BikeStationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -104,11 +105,11 @@ class BikeStation extends Model
      * @param  Builder<BikeStation>  $query
      */
     #[Scope]
-    protected function withAvailability(Builder $query, ?string $availability): void
+    protected function withAvailability(Builder $query, ?BikeStationAvailability $availability): void
     {
         $query
-            ->when($availability === 'rentable', fn (Builder $query) => $query->rentable())
-            ->when($availability === 'returnable', fn (Builder $query) => $query->returnable());
+            ->when($availability === BikeStationAvailability::Rentable, fn (Builder $query) => $query->rentable())
+            ->when($availability === BikeStationAvailability::Returnable, fn (Builder $query) => $query->returnable());
     }
 
     /**

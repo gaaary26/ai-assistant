@@ -2,8 +2,10 @@
 
 namespace App\Ai\Tools;
 
+use App\Enums\BikeStationAvailability;
 use App\Models\BikeStation;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Validation\Rule;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -26,7 +28,7 @@ class SearchBikeStations implements Tool
         $validated = $request->validate([
             'keyword' => ['nullable', 'string', 'max:100'],
             'district' => ['nullable', 'string', 'max:20'],
-            'availability' => ['nullable', 'in:any,rentable,returnable'],
+            'availability' => ['nullable', Rule::enum(BikeStationAvailability::class)],
             'limit' => ['nullable', 'integer', 'min:1', 'max:20'],
         ]);
 
@@ -38,7 +40,7 @@ class SearchBikeStations implements Tool
                 ->where('name', 'like', "%{$keyword}%")
                 ->orWhere('address', 'like', "%{$keyword}%")))
             ->when(filled($district), fn ($query) => $query->where('district', 'like', "%{$district}%"))
-            ->withAvailability($validated['availability'] ?? null)
+            ->withAvailability($request->enum('availability', BikeStationAvailability::class))
             ->orderByDesc('available_rent_bikes')
             ->limit($validated['limit'] ?? 10)
             ->get();
@@ -64,7 +66,7 @@ class SearchBikeStations implements Tool
                 ->nullable(),
             'availability' => $schema
                 ->string()
-                ->enum(['any', 'rentable', 'returnable', null])
+                ->enum(BikeStationAvailability::class)
                 ->description('Only return stations with bikes to rent or free docks. Defaults to any.')
                 ->nullable(),
             'limit' => $schema

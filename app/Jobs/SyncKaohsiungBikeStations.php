@@ -42,11 +42,6 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
     public int $uniqueFor = 600;
 
     /**
-     * How many rows to write per insert statement.
-     */
-    private const CHUNK_SIZE = 500;
-
-    /**
      * Fetch the latest station availability, update the stations and record a snapshot of each one.
      */
     public function handle(): void
@@ -55,7 +50,7 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
         $recordedAt = now();
 
         DB::transaction(function () use ($stations, $recordedAt) {
-            foreach ($stations->chunk(self::CHUNK_SIZE) as $chunk) {
+            foreach ($stations->chunk(500) as $chunk) {
                 BikeStation::upsert($chunk->values()->all(), ['sno'], [
                     'name',
                     'district',
@@ -81,7 +76,7 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
                 'recorded_at' => $recordedAt,
             ]);
 
-            foreach ($snapshots->chunk(self::CHUNK_SIZE) as $chunk) {
+            foreach ($snapshots->chunk(500) as $chunk) {
                 BikeStationSnapshot::insert($chunk->values()->all());
             }
         });
@@ -125,20 +120,8 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
                 'available_rent_bikes' => (int) ($station['sbi'] ?? 0),
                 'available_electric_bikes' => isset($station['sbi_detail']['eyb']) ? (int) $station['sbi_detail']['eyb'] : null,
                 'available_return_bikes' => (int) ($station['bemp'] ?? 0),
-                'source_updated_at' => $this->parseSourceTime($station['mday'] ?? null),
+                'source_updated_at' => filled($station['mday'] ?? null) ? Carbon::parse((string) $station['mday']) : null,
             ])
             ->values();
-    }
-
-    /**
-     * Parse the source's "YmdHis" local timestamp into the application timezone.
-     */
-    private function parseSourceTime(mixed $value): ?Carbon
-    {
-        if ((! is_string($value) && ! is_int($value)) || preg_match('/^\d{14}$/', (string) $value) !== 1) {
-            return null;
-        }
-
-        return Carbon::createFromFormat('YmdHis', (string) $value, config()->string('app.timezone'));
     }
 }
