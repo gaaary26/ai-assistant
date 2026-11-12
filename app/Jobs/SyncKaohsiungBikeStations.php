@@ -42,11 +42,6 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
     public int $uniqueFor = 600;
 
     /**
-     * How many rows to write per insert statement.
-     */
-    private const CHUNK_SIZE = 500;
-
-    /**
      * Fetch the latest station availability, update the stations and record a snapshot of each one.
      */
     public function handle(): void
@@ -55,7 +50,7 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
         $recordedAt = now();
 
         DB::transaction(function () use ($stations, $recordedAt) {
-            foreach ($stations->chunk(self::CHUNK_SIZE) as $chunk) {
+            foreach ($stations->chunk(500) as $chunk) {
                 BikeStation::upsert($chunk->values()->all(), ['sno'], [
                     'name',
                     'district',
@@ -81,7 +76,7 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
                 'recorded_at' => $recordedAt,
             ]);
 
-            foreach ($snapshots->chunk(self::CHUNK_SIZE) as $chunk) {
+            foreach ($snapshots->chunk(500) as $chunk) {
                 BikeStationSnapshot::insert($chunk->values()->all());
             }
         });
