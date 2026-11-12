@@ -125,20 +125,8 @@ class SyncKaohsiungBikeStations implements ShouldBeUnique, ShouldQueue
                 'available_rent_bikes' => (int) ($station['sbi'] ?? 0),
                 'available_electric_bikes' => isset($station['sbi_detail']['eyb']) ? (int) $station['sbi_detail']['eyb'] : null,
                 'available_return_bikes' => (int) ($station['bemp'] ?? 0),
-                'source_updated_at' => $this->parseSourceTime($station['mday'] ?? null),
+                'source_updated_at' => filled($station['mday'] ?? null) ? Carbon::parse((string) $station['mday']) : null,
             ])
             ->values();
-    }
-
-    /**
-     * Parse the source's "YmdHis" local timestamp into the application timezone.
-     */
-    private function parseSourceTime(mixed $value): ?Carbon
-    {
-        if ((! is_string($value) && ! is_int($value)) || preg_match('/^\d{14}$/', (string) $value) !== 1) {
-            return null;
-        }
-
-        return Carbon::createFromFormat('YmdHis', (string) $value, config()->string('app.timezone'));
     }
 }
